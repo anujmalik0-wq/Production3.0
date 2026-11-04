@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shree Sagar Enterprises - Production & ERP</title>
+    <!-- PWA Manifest & Theme -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+
+    <!-- LOGIN OVERLAY -->
+    <div id="loginModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md">
+        <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
+            <div class="w-16 h-16 bg-blue-600/20 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <h2 id="loginTitle" class="text-2xl font-bold mb-2">Shree Sagar ERP</h2>
+            <p class="text-slate-400 text-sm mb-6">कृपया सुरक्षित लॉगिन के लिए अपना पिन दर्ज करें</p>
+            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+                <input type="password" id="pinInput" placeholder="सिक्योर पिन दर्ज करें" required autocomplete="current-password"
+                    class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-center text-xl tracking-widest text-white focus:outline-none focus:border-blue-500">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-blue-600/30">
+                    लॉगिन करें (Login)
+                </button>
+            </form>
+            <div class="mt-6 flex justify-between text-xs text-slate-500">
+                <span>Admin PIN: 112233</span>
+                <span>Employee PIN: 1122</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div id="appContainer" class="hidden">
+        <!-- HEADER -->
+        <header class="bg-slate-900/80 backdrop-blur border-b border-slate-800 sticky top-0 z-40 px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-600 text-white p-2 rounded-xl shadow-md"><i class="fa-solid fa-industry text-xl"></i></div>
+                <div>
+                    <h1 id="brandTitle" class="text-lg font-bold text-white">Shree Sagar Enterprises</h1>
+                    <p class="text-xs text-slate-400">Production, Costing & ERP Dashboard</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span id="userRoleBadge" class="px-3 py-1 bg-blue-500/10 text-blue-400 text-xs font-semibold rounded-full border border-blue-500/20">Admin Mode</span>
+                <button onclick="logout()" class="bg-slate-800 hover:bg-red-600/20 hover:text-red-400 text-slate-300 px-4 py-2 rounded-xl text-sm transition flex items-center space-x-2">
+                    <i class="fa-solid fa-right-from-bracket"></i><span>लॉगआउट</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- NAVIGATION TABS -->
+        <nav class="bg-slate-900 border-b border-slate-800 px-6 py-2 flex space-x-4 overflow-x-auto">
+            <button onclick="switchTab('dashboard')" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium transition bg-blue-600 text-white flex items-center space-x-2" data-tab="dashboard">
+                <i class="fa-solid fa-chart-pie"></i><span>डैशबोर्ड</span>
+            </button>
+            <button onclick="switchTab('formulation')" class="tab-btn admin-only px-4 py-2 rounded-xl text-sm font-medium transition text-slate-400 hover:text-white flex items-center space-x-2" data-tab="formulation">
+                <i class="fa-solid fa-flask"></i><span>फॉर्मूलेशन & कॉस्टिंग</span>
+            </button>
+            <button onclick="switchTab('sales')" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium transition text-slate-400 hover:text-white flex items-center space-x-2" data-tab="sales">
+                <i class="fa-solid fa-bullseye"></i><span>एम्प्लॉयी & सेल्स टारगेट</span>
+            </button>
+            <button onclick="switchTab('territory')" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium transition text-slate-400 hover:text-white flex items-center space-x-2" data-tab="territory">
+                <i class="fa-solid fa-map-location-dot"></i><span>एरिया रिपोर्ट्स</span>
+            </button>
+            <button onclick="switchTab('settings')" class="tab-btn admin-only px-4 py-2 rounded-xl text-sm font-medium transition text-slate-400 hover:text-white flex items-center space-x-2" data-tab="settings">
+                <i class="fa-solid fa-gear"></i><span>सेटिंग्स & बैकअप</span>
+            </button>
+        </nav>
+
+        <!-- CONTENT AREA -->
+        <main class="p-6 max-w-7xl mx-auto space-y-6">
+            
+            <!-- 1. DASHBOARD TAB -->
+            <section id="tab-dashboard" class="space-y-6 tab-content">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="bg-slate-800/50 border border-slate-800 p-5 rounded-2xl">
+                        <p class="text-slate-400 text-sm">कुल मासिक टारगेट</p>
+                        <h3 id="dashTarget" class="text-2xl font-bold text-white mt-1">₹ 2,00,000</h3>
+                    </div>
+                    <div class="bg-slate-800/50 border border-slate-800 p-5 rounded-2xl">
+                        <p class="text-slate-400 text-sm">कुल अचीव्ड सेल</p>
+                        <h3 id="dashAchieved" class="text-2xl font-bold text-emerald-400 mt-1">₹ 1,45,000</h3>
+                    </div>
+                    <div class="bg-slate-800/50 border border-slate-800 p-5 rounded-2xl">
+                        <p class="text-slate-400 text-sm">कुल फॉर्मूलेशन</p>
+                        <h3 id="dashFormulations" class="text-2xl font-bold text-blue-400 mt-1">4</h3>
+                    </div>
+                    <div class="bg-slate-800/50 border border-slate-800 p-5 rounded-2xl">
+                        <p class="text-slate-400 text-sm">सक्रिय एम्प्लॉयी</p>
+                        <h3 id="dashEmployees" class="text-2xl font-bold text-amber-400 mt-1">3</h3>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-slate-800/50 border border-slate-800 p-6 rounded-2xl">
+                        <h3 class="text-lg font-bold mb-4">एम्प्लॉयी परफॉरमेंस ग्राफ</h3>
+                        <canvas id="employeeChart" height="200"></canvas>
+                    </div>
+                    <div class="bg-slate-800/50 border border-slate-800 p-6 rounded-2xl">
+                        <h3 class="text-lg font-bold mb-4">एरिया/क्षेत्रीय सेल्स शेयर</h3>
+                        <canvas id="territoryChart" height="200"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. FORMULATION TAB -->
+            <section id="tab-formulation" class="space-y-6 tab-content hidden admin-only">
+                <div class="bg-slate-800/50 border border-slate-800 p-6 rounded-2xl flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xl font-bold">फॉर्मूलेशन और कॉस्टिंग कैलकुलेटर</h2>
+                        <p class="text-slate-400 text-sm">रॉ मटेरियल, केमिकल मात्रा, बॉटल्स और कार्टन कटर की गणना</p>
+                    </div>
+                    <button onclick="alert('नया फॉर्मूलेशन जोड़ने का फॉर्म नीचे भरें')" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-xl text-sm font-semibold transition">
+                        <i class="fa-solid fa-plus mr-2"></i>नया फॉर्मूला बनाएं
+                    </button>
+                </div>
+                <div class="bg-slate-800/50 border border-slate-800 p-6 rounded-2xl">
+                    <h3 class="font-bold mb-4">सक्रिय फॉर्मूलेशन लिस्ट</h3>
+                    <div id="formulationListContainer" class="space-y-4">
+                        <!-- Dynamic formulation cards -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. SALES & EMPLOYEES TAB -->
+            <section id="tab-sales" class="space-y-6 tab-content hidden">
+                <div class="bg-slate-800/50 border border-slate-800 p-6 rounded-2xl flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xl font-bold">एम्प्लॉयी टारगेट और WhatsApp रिपोर्ट</h2>
+                        <p class="text-slate-400 text-sm">कर्मचारियों की परफॉर्मेंस और डायरेक्ट WhatsApp ग्रीटिंग लिंक</p>
+                    </div>
+                </div>
+                <div class="bg-slate-800/50 border border-slate-800 p-6 rounded-2xl overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-700 text-slate-400 text-sm">
+                                <th class="py-3 px-4">एम्प्लॉयी नाम</th>
+                                <th class="py-3 px-4">एरिया</th>
+                                <th class="py-3 px-4">टारगेट (₹)</th>
+                                <th class="py-3 px-4">अचीव्ड (₹)</th>
+                                <th class="py-3 px-4">कार्रवाई / WhatsApp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeeTableBody" class="divide-y divide-slate-800 text-sm">
+                            <!-- Dynamic rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 4. TERRITORY TAB -->
+            <section id="tab-territory" class="space-y-6 tab-content hidden">
+                <div class="bg-slate-800/50 border border-slate-800 p-6 rounded-2xl">
+                    <h2 class="text-xl font-bold mb-2">राज्य और क्षेत्र (State/Territory) अनुसार बिक्री</h2>
+                    <p class="text-slate-400 text-sm mb-6">किस क्षेत्र में कितनी मांग और बिक्री हो रही है</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="territoryCardsContainer">
+                        <!-- Territory cards -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. SETTINGS TAB -->
+            <section id="tab-settings" class="space-y-6 tab-content hidden admin-only">
+                <div class="bg-slate-800/50 border border-slate-800 p-6 rounded-2xl space-y-4">
+                    <h2 class="text-xl font-bold">कम्पनी प्रोफाइल & सुरक्षा सेटिंग्स</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm text-slate-400 mb-1">कम्पनी का नाम</label>
+                            <input type="text" id="settingCompanyName" value="Shree Sagar Enterprises" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-slate-400 mb-1">एडमिन पासवर्ड बदलें</label>
+                            <input type="text" id="settingAdminPin" value="112233" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white">
+                        </div>
+                    </div>
+                    <div class="pt-4 flex space-x-4">
+                        <button onclick="saveSettings()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2.5 rounded-xl font-semibold transition">सेटिंग्स सेव करें</button>
+                        <button onclick="exportData()" class="bg-slate-700 hover:bg-slate-600 px-6 py-2.5 rounded-xl font-semibold transition">JSON बैकअप डाउनलोड करें</button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- SCRIPT LOGIC -->
+    <script>
+        let currentUserRole = null;
+        let db = {
+            companyName: "Shree Sagar Enterprises",
+            adminPin: "112233",
+            employeePin: "1122",
+            employees: [
+                { name: "Rahul Kumar", area: "Shamli & Muzaffarnagar", target: 70000, achieved: 55000, phone: "919000000001" },
+                { name: "Amit Sharma", area: "Meerut & Panipat", target: 80000, achieved: 60000, phone: "919000000002" },
+                { name: "Vikas Tyagi", area: "Karnal & Shamli Rural", target: 50000, achieved: 30000, phone: "919000000003" }
+            ],
+            formulations: [
+                { name: "Casto Bond Super Glue 20g", type: "Finished Good", cost: 14.50, targetSale: 10000 },
+                { name: "Acrylic Base Raw Mix", type: "Raw Material", cost: 85.00, targetSale: 5000 }
+            ]
+        };
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const pin = document.getElementById('pinInput').value;
+            if(pin === db.adminPin) {
+                currentUserRole = 'admin';
+                document.getElementById('userRoleBadge').innerText = 'Admin Mode';
+                document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+            } else if(pin === db.employeePin) {
+                currentUserRole = 'employee';
+                document.getElementById('userRoleBadge').innerText = 'Employee Mode (Restricted)';
+                document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+                switchTab('sales');
+            } else {
+                alert('गलत पिन! कृपया सही पिन दर्ज करें।');
+                return;
+            }
+            document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('appContainer').classList.remove('hidden');
+            initDashboard();
+        }
+
+        function logout() {
+            currentUserRole = null;
+            document.getElementById('pinInput').value = '';
+            document.getElementById('appContainer').classList.add('hidden');
+            document.getElementById('loginModal').classList.remove('hidden');
+        }
+
+        function switchTab(tabId) {
+            if(currentUserRole === 'employee' && (tabId === 'formulation' || tabId === 'settings')) {
+                alert('एम्प्लॉयी मोड में यह सेक्शन प्रतिबंधित है!');
+                return;
+            }
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('bg-blue-600', 'text-white');
+                el.classList.add('text-slate-400');
+            });
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            const activeBtn = document.querySelector(`[data-tab="${tabId}"]`);
+            if(activeBtn) {
+                activeBtn.classList.add('bg-blue-600', 'text-white');
+                activeBtn.classList.remove('text-slate-400');
+            }
+        }
+
+        function initDashboard() {
+            document.getElementById('brandTitle').innerText = db.companyName;
+            renderEmployees();
+            renderFormulations();
+            renderTerritories();
+            renderCharts();
+        }
+
+        function renderEmployees() {
+            const tbody = document.getElementById('employeeTableBody');
+            tbody.innerHTML = '';
+            db.employees.forEach(emp => {
+                const msg = `नमस्ते ${emp.name}, आपकी सेल्स परफॉर्मेंस रिपोर्ट: टारगेट ₹${emp.target}, अचीव्ड ₹${emp.achieved}. उत्कृष्ट प्रयास! - ${db.companyName}`;
+                const waLink = `https://wa.me/${emp.phone}?text=${encodeURIComponent(msg)}`;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800/30">
+                        <td class="py-3 px-4 font-semibold text-white">${emp.name}</td>
+                        <td class="py-3 px-4 text-slate-400">${emp.area}</td>
+                        <td class="py-3 px-4">₹ ${emp.target.toLocaleString()}</td>
+                        <td class="py-3 px-4 text-emerald-400">₹ ${emp.achieved.toLocaleString()}</td>
+                        <td class="py-3 px-4">
+                            <a href="${waLink}" target="_blank" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold inline-flex items-center space-x-1 transition">
+                                <i class="fa-brands fa-whatsapp text-sm"></i><span>WhatsApp भेजें</span>
+                            </a>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        function renderFormulations() {
+            const container = document.getElementById('formulationListContainer');
+            container.innerHTML = '';
+            db.formulations.forEach(f => {
+                container.innerHTML += `
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex justify-between items-center">
+                        <div>
+                            <h4 class="font-bold text-white">${f.name}</h4>
+                            <span class="text-xs px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded">${f.type}</span>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-slate-400">कॉस्ट मूल्य</p>
+                            <p class="font-bold text-emerald-400">₹ ${f.cost.toFixed(2)}</p>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function renderTerritories() {
+            const container = document.getElementById('territoryCardsContainer');
+            container.innerHTML = `
+                <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                    <h4 class="font-bold text-blue-400">Shamli & Muzaffarnagar</h4>
+                    <p class="text-2xl font-bold mt-2">₹ 55,000</p>
+                    <p class="text-xs text-slate-400 mt-1">डिफ़ॉल्ट प्लांट हब</p>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                    <h4 class="font-bold text-blue-400">Meerut & Panipat</h4>
+                    <p class="text-2xl font-bold mt-2">₹ 60,000</p>
+                    <p class="text-xs text-slate-400 mt-1">उच्च मांग क्षेत्र</p>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                    <h4 class="font-bold text-blue-400">Karnal</h4>
+                    <p class="text-2xl font-bold mt-2">₹ 30,000</p>
+                    <p class="text-xs text-slate-400 mt-1">ग्रोथ ज़ोन</p>
+                </div>`;
+        }
+
+        function renderCharts() {
+            new Chart(document.getElementById('employeeChart'), {
+                type: 'bar',
+                data: {
+                    labels: db.employees.map(e => e.name),
+                    datasets: [
+                        { label: 'टारगेट', data: db.employees.map(e => e.target), backgroundColor: '#3b82f6' },
+                        { label: 'अचीव्ड', data: db.employees.map(e => e.achieved), backgroundColor: '#10b981' }
+                    ]
+                },
+                options: { responsive: true, plugins: { legend: { labels: { color: '#cbd5e1' } } } }
+            });
+
+            new Chart(document.getElementById('territoryChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Shamli', 'Meerut', 'Karnal'],
+                    datasets: [{ data: [55000, 60000, 30000], backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'] }]
+                },
+                options: { responsive: true, plugins: { legend: { labels: { color: '#cbd5e1' } } } }
+            });
+        }
+
+        function saveSettings() {
+            db.companyName = document.getElementById('settingCompanyName').value;
+            db.adminPin = document.getElementById('settingAdminPin').value;
+            alert('सेटिंग्स सफलतापूर्क सहेज ली गई हैं!');
+            initDashboard();
+        }
+
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", "ShreeSagar_ERP_Backup.json");
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+        }
+    </script>
+</body>
+</html>
