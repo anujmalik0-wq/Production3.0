@@ -1,7 +1,9 @@
 {
   "name": "Shree Sagar ERP & Production",
   "short_name": "ShreeSagar ERP",
+  "description": "Shree Sagar Enterprises Production, Costing and Business ERP System",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#2563eb",
@@ -9,7 +11,8 @@
     {
       "src": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
